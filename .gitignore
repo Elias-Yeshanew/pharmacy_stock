@@ -1,0 +1,44 @@
+# Dependency directories
+node_modules/
+/backend/vendor/
+
+# Local configuration/env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+/backend/.env
+/backend/.env.backup
+/backend/.env.production
+
+# Build outputs
+dist/
+dist-ssr/
+/backend/public/build/
+/backend/public/hot/
+/backend/public/storage
+
+# IDEs and editors
+.idea/
+.vscode/
+.cursor/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.phpactor.json
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Testing caches & logs
+*.log
+/backend/.phpunit.result.cache
+/backend/.phpunit.cache/
+/backend/storage/*.key
+/backend/storage/pail
