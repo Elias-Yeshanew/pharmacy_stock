@@ -51,3 +51,21 @@ Route::middleware('auth:sanctum')->get('/stock-movements', function(\Illuminate\
     if ($request->date_to)   $query->whereDate('created_at','<=',$request->date_to);
     return response()->json($query->paginate($request->per_page ?? 20));
 });
+// Temporary Database Verification Route
+Route::get('/db-test', function () {
+    try {
+        \DB::connection()->getPdo();
+        $medicinesCount = \App\Models\Medicine::count();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database connection established successfully!',
+            'database_name' => \DB::connection()->getDatabaseName(),
+            'medicines_in_db' => $medicinesCount,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to connect to the database: ' . $e->getMessage()
+        ], 500);
+    }
+});
