@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     git \
     icu-dev \
     postgresql-dev \
-    sqlite-dev
+    sqlite-dev \
+    libxml2-dev
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -25,10 +26,19 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         zip \
         gd \
         intl \
-        opcache
+        opcache \
+        bcmath \
+        dom \
+        xml \
+        xmlwriter \
+        simplexml
 
 # Copy Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Composer environment configs
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_MEMORY_LIMIT=-1
 
 # Set working directory
 WORKDIR /var/www/html
