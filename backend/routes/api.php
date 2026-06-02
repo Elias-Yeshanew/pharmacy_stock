@@ -55,17 +55,27 @@ Route::middleware('auth:sanctum')->get('/stock-movements', function(\Illuminate\
 Route::get('/db-test', function () {
     try {
         \DB::connection()->getPdo();
+        
+        // Automaticaly run migrations and seeder if database tables are empty
+        if (!\Schema::hasTable('users') || \App\Models\User::count() === 0) {
+            \Artisan::call('migrate', ['--force' => true]);
+            \Artisan::call('db:seed', ['--force' => true]);
+            $action = 'Database successfully migrated and seeded!';
+        } else {
+            $action = 'Database connection active and already populated!';
+        }
+
         $medicinesCount = \App\Models\Medicine::count();
         return response()->json([
             'status' => 'success',
-            'message' => 'Database connection established successfully!',
+            'message' => $action,
             'database_name' => \DB::connection()->getDatabaseName(),
             'medicines_in_db' => $medicinesCount,
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Failed to connect to the database: ' . $e->getMessage()
+            'message' => 'Failed to connect or seed: ' . $e->getMessage()
         ], 500);
     }
 });
