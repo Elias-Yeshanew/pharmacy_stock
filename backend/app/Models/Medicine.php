@@ -61,18 +61,26 @@ class Medicine extends Model
 
     public function getStockQuantityAttribute()
     {
-        if ($this->relationLoaded('activeBranchStock')) {
-            return $this->activeBranchStock?->stock_quantity ?? 0;
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        if ($branchId) {
+            if ($this->relationLoaded('activeBranchStock')) {
+                return $this->activeBranchStock?->stock_quantity ?? 0;
+            }
+            return $this->activeBranchStock()->value('stock_quantity') ?? 0;
         }
-        return $this->activeBranchStock()->value('stock_quantity') ?? 0;
+        return $this->branchStocks()->sum('stock_quantity');
     }
 
     public function getReorderLevelAttribute()
     {
-        if ($this->relationLoaded('activeBranchStock')) {
-            return $this->activeBranchStock?->reorder_level ?? $this->attributes['reorder_level'] ?? 10;
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        if ($branchId) {
+            if ($this->relationLoaded('activeBranchStock')) {
+                return $this->activeBranchStock?->reorder_level ?? $this->attributes['reorder_level'] ?? 10;
+            }
+            return $this->activeBranchStock()->value('reorder_level') ?? $this->attributes['reorder_level'] ?? 10;
         }
-        return $this->activeBranchStock()->value('reorder_level') ?? $this->attributes['reorder_level'] ?? 10;
+        return $this->attributes['reorder_level'] ?? 10;
     }
 
     public function getStockStatusAttribute(): string
@@ -90,37 +98,58 @@ class Medicine extends Model
 
     public function scopeLowStock($query)
     {
-        return $query->whereHas('activeBranchStock', function ($q) {
-            $q->whereColumn('stock_quantity', '<=', 'reorder_level')
-              ->where('stock_quantity', '>', 0);
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        if ($branchId) {
+            return $query->whereHas('activeBranchStock', function ($q) {
+                $q->whereColumn('stock_quantity', '<=', 'reorder_level')
+                  ->where('stock_quantity', '>', 0);
+            });
+        }
+        return $query->where(function ($q) {
+            $q->whereRaw('(select coalesce(sum(stock_quantity), 0) from medicine_branch where medicine_id = medicines.id) <= medicines.reorder_level')
+              ->whereRaw('(select coalesce(sum(stock_quantity), 0) from medicine_branch where medicine_id = medicines.id) > 0');
         });
     }
 
     public function scopeOutOfStock($query)
     {
-        return $query->whereDoesntHave('activeBranchStock')
-            ->orWhereHas('activeBranchStock', function ($q) {
-                $q->where('stock_quantity', '<=', 0);
-            });
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        if ($branchId) {
+            return $query->whereDoesntHave('activeBranchStock')
+                ->orWhereHas('activeBranchStock', function ($q) {
+                    $q->where('stock_quantity', '<=', 0);
+                });
+        }
+        return $query->whereRaw('(select coalesce(sum(stock_quantity), 0) from medicine_branch where medicine_id = medicines.id) <= 0');
     }
 
     public function scopeExpiringSoon($query, $days = 90)
     {
-        return $query->whereNotNull('expiry_date')
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        $base = $query->whereNotNull('expiry_date')
             ->whereDate('expiry_date', '<=', now()->addDays($days))
-            ->whereDate('expiry_date', '>=', now())
-            ->whereHas('activeBranchStock', function ($q) {
+            ->whereDate('expiry_date', '>=', now());
+            
+        if ($branchId) {
+            return $base->whereHas('activeBranchStock', function ($q) {
                 $q->where('stock_quantity', '>', 0);
             });
+        }
+        return $base->whereRaw('(select coalesce(sum(stock_quantity), 0) from medicine_branch where medicine_id = medicines.id) > 0');
     }
 
     public function scopeExpired($query)
     {
-        return $query->whereNotNull('expiry_date')
-            ->whereDate('expiry_date', '<', now())
-            ->whereHas('activeBranchStock', function ($q) {
+        $branchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        $base = $query->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<', now());
+            
+        if ($branchId) {
+            return $base->whereHas('activeBranchStock', function ($q) {
                 $q->where('stock_quantity', '>', 0);
             });
+        }
+        return $base->whereRaw('(select coalesce(sum(stock_quantity), 0) from medicine_branch where medicine_id = medicines.id) > 0');
     }
 
     public function adjustStockForBranch(

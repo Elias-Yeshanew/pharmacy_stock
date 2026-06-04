@@ -18,13 +18,25 @@ class BranchHelper
             return $user->branch_id;
         }
 
-        // Admin can switch branches via X-Branch-Id header
+        // Check query parameter override first
+        $queryBranchId = request()->query('branch_id');
+        if ($queryBranchId !== null) {
+            if ($queryBranchId === 'all') {
+                return null;
+            }
+            return (int) $queryBranchId;
+        }
+
+        // Check header value
         $headerBranchId = request()->header('X-Branch-Id');
-        if ($headerBranchId) {
+        if ($headerBranchId !== null) {
+            if ($headerBranchId === 'all') {
+                return null;
+            }
             return (int) $headerBranchId;
         }
 
-        // Fallback: Admin's own branch, or first branch, or null
-        return $user->branch_id ?? Branch::first()?->id;
+        // Default for Admin is "All Branches" (null)
+        return null;
     }
 }

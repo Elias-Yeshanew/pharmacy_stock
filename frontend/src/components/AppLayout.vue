@@ -56,10 +56,11 @@
               Active Branch:
             </label>
             <select 
-              :value="authStore.activeBranchId" 
+              :value="authStore.activeBranchId || 'all'" 
               @change="e => authStore.setActiveBranchId(e.target.value)" 
               class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
             >
+              <option value="all">All Branches Summary</option>
               <option v-for="b in authStore.branches" :key="b.id" :value="b.id">{{ b.name }}</option>
             </select>
           </div>

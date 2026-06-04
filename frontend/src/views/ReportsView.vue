@@ -1,12 +1,22 @@
 <template>
   <div class="space-y-6">
-    <!-- Report tabs -->
-    <div class="flex gap-2 border-b border-gray-200">
-      <button v-for="tab in tabs" :key="tab.id" @click="activeTab=tab.id"
-        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
-        :class="activeTab===tab.id ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'">
-        {{ tab.label }}
-      </button>
+    <!-- Report tabs and Branch Filter -->
+    <div class="flex items-center justify-between border-b border-gray-200">
+      <div class="flex gap-2">
+        <button v-for="tab in tabs" :key="tab.id" @click="activeTab=tab.id"
+          class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+          :class="activeTab===tab.id ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'">
+          {{ tab.label }}
+        </button>
+      </div>
+      <!-- Branch Filter for Admins -->
+      <div v-if="authStore.user?.role === 'admin'" class="flex items-center gap-2 pb-1">
+        <label class="text-xs text-gray-500 font-medium">Report Branch:</label>
+        <select v-model="selectedBranch" class="text-xs bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer">
+          <option value="all">All Branches</option>
+          <option v-for="b in authStore.branches" :key="b.id" :value="b.id">{{ b.name }}</option>
+        </select>
+      </div>
     </div>
 
     <!-- Stock Report -->
@@ -168,6 +178,7 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const activeTab = ref('stock')
 const tabs = [{ id:'stock', label:'Stock Report' }, { id:'sales', label:'Sales Report' }, { id:'expiry', label:'Expiry Report' }]
+const selectedBranch = ref(authStore.activeBranchId || 'all')
 
 // Stock
 const stockReport = ref([]); const stockLoading = ref(false); const stockFilter = ref('all')
@@ -189,12 +200,21 @@ const expiryReport = ref([]); const expiryLoading = ref(false); const expiryDays
 
 onMounted(() => { fetchStockReport(); fetchSalesReport(); fetchExpiryReport() })
 watch(stockFilter, fetchStockReport)
-watch(() => authStore.activeBranchId, () => { fetchStockReport(); fetchSalesReport(); fetchExpiryReport() })
+
+// Keep local selected branch filter synchronized with top bar, and reload on changes
+watch(() => authStore.activeBranchId, (newId) => {
+  selectedBranch.value = newId || 'all'
+})
+watch(selectedBranch, () => {
+  fetchStockReport()
+  fetchSalesReport()
+  fetchExpiryReport()
+})
 
 async function fetchStockReport() {
   stockLoading.value = true
   try {
-    const params = { per_page:200 }
+    const params = { per_page:200, branch_id: selectedBranch.value }
     if (stockFilter.value !== 'all') params.stock_status = stockFilter.value
     const { data } = await api.get('/medicines', { params })
     stockReport.value = data.data
@@ -204,7 +224,7 @@ async function fetchStockReport() {
 async function fetchSalesReport() {
   salesLoading.value=true
   try {
-    const { data } = await api.get('/sales', { params:{ per_page:200, date_from:salesDateFrom.value, date_to:salesDateTo.value }})
+    const { data } = await api.get('/sales', { params:{ per_page:200, date_from:salesDateFrom.value, date_to:salesDateTo.value, branch_id: selectedBranch.value }})
     salesReport.value = data.data
   } finally { salesLoading.value=false }
 }
@@ -212,7 +232,7 @@ async function fetchSalesReport() {
 async function fetchExpiryReport() {
   expiryLoading.value=true
   try {
-    const { data } = await api.get('/medicines', { params:{ stock_status:'expiring_soon', per_page:200 }})
+    const { data } = await api.get('/medicines', { params:{ stock_status:'expiring_soon', per_page:200, branch_id: selectedBranch.value }})
     expiryReport.value = data.data.filter(m => m.days_to_expiry <= expiryDays.value)
   } finally { expiryLoading.value=false }
 }
