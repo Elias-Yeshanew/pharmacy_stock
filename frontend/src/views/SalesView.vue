@@ -95,14 +95,16 @@ import { ref, watch, onMounted } from 'vue'
 import api from '@/composables/useApi'
 import Modal from '@/components/Modal.vue'
 import { format, parseISO } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const sales = ref([]); const loading = ref(true)
 const page = ref(1); const search = ref(''); const dateFrom = ref(''); const dateTo = ref('')
 const pagination = ref({ current_page:1, last_page:1, total:0 })
 const showDetail = ref(false); const selectedSale = ref(null)
 
 onMounted(fetchSales)
-watch([search, dateFrom, dateTo], () => { page.value=1; fetchSales() })
+watch([search, dateFrom, dateTo, () => authStore.activeBranchId], () => { page.value=1; fetchSales() })
 watch(page, fetchSales)
 
 async function fetchSales() {

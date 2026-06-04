@@ -16,7 +16,8 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   HomeIcon, BeakerIcon, ArrowsRightLeftIcon, ShoppingCartIcon,
-  ClipboardDocumentListIcon, TruckIcon, TagIcon, ChartBarIcon
+  ClipboardDocumentListIcon, TruckIcon, TagIcon, ChartBarIcon,
+  BuildingStorefrontIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({ to: String, label: String, icon: String })
@@ -32,6 +33,7 @@ const iconMap = {
   suppliers:  TruckIcon,
   categories: TagIcon,
   reports:    ChartBarIcon,
+  branches:   BuildingStorefrontIcon,
 }
 
 const iconComponent = computed(() => iconMap[props.icon] || HomeIcon)

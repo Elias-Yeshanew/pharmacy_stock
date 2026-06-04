@@ -5,14 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Traits\BelongsToBranch;
+
 class Sale extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToBranch;
 
     protected $fillable = [
         'invoice_number', 'customer_name', 'customer_phone', 'subtotal', 'discount',
         'total', 'payment_method', 'status', 'prescription_required',
-        'prescription_number', 'notes', 'user_id',
+        'prescription_number', 'notes', 'user_id', 'branch_id',
     ];
 
     protected $casts = [

@@ -106,10 +106,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import api from '@/composables/useApi'
 import StatCard from '@/components/StatCard.vue'
 import { format, formatDistanceToNow, parseISO } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const stats = ref({ total_medicines:0, low_stock:0, out_of_stock:0, expiring_soon:0, today_sales:0, month_sales:0, inventory_value:0 })
 const lowStockMedicines = ref([])
@@ -117,7 +120,12 @@ const expiringSoon = ref([])
 const recentMovements = ref([])
 const loading = ref(true)
 
-onMounted(async () => {
+onMounted(fetchDashboardData)
+
+watch(() => authStore.activeBranchId, fetchDashboardData)
+
+async function fetchDashboardData() {
+  loading.value = true
   try {
     const { data } = await api.get('/dashboard')
     stats.value = data.stats
@@ -125,7 +133,7 @@ onMounted(async () => {
     expiringSoon.value = data.expiring_soon
     recentMovements.value = data.recent_movements
   } finally { loading.value = false }
-})
+}
 
 function formatNum(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 function formatDate(d) { return d ? format(parseISO(d), 'dd MMM yyyy') : '—' }

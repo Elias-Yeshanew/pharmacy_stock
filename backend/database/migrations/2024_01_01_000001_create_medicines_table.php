@@ -38,7 +38,6 @@ return new class extends Migration {
             $table->string('unit'); // pcs, bottle, box
             $table->decimal('purchase_price', 10, 2);
             $table->decimal('selling_price', 10, 2);
-            $table->integer('stock_quantity')->default(0);
             $table->integer('reorder_level')->default(10);
             $table->date('expiry_date')->nullable();
             $table->string('storage_conditions')->nullable();
@@ -49,9 +48,20 @@ return new class extends Migration {
             $table->softDeletes();
         });
 
+        Schema::create('medicine_branch', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('medicine_id')->constrained()->onDelete('cascade');
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
+            $table->integer('stock_quantity')->default(0);
+            $table->integer('reorder_level')->default(10);
+            $table->timestamps();
+            $table->unique(['medicine_id', 'branch_id']);
+        });
+
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('medicine_id')->constrained()->onDelete('cascade');
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->enum('type', ['in', 'out', 'adjustment', 'return', 'expired']);
             $table->integer('quantity');
             $table->integer('quantity_before');
@@ -69,6 +79,7 @@ return new class extends Migration {
             $table->id();
             $table->string('order_number')->unique();
             $table->foreignId('supplier_id')->constrained()->onDelete('restrict');
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['pending', 'ordered', 'received', 'cancelled'])->default('pending');
             $table->date('order_date');
             $table->date('expected_date')->nullable();
@@ -95,6 +106,7 @@ return new class extends Migration {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_number')->unique();
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->string('customer_name')->nullable();
             $table->string('customer_phone')->nullable();
             $table->decimal('subtotal', 12, 2);
@@ -128,6 +140,7 @@ return new class extends Migration {
         Schema::dropIfExists('purchase_order_items');
         Schema::dropIfExists('purchase_orders');
         Schema::dropIfExists('stock_movements');
+        Schema::dropIfExists('medicine_branch');
         Schema::dropIfExists('medicines');
         Schema::dropIfExists('suppliers');
         Schema::dropIfExists('categories');

@@ -48,7 +48,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('pharmacy-app')->plainTextToken;
 
-        return response()->json(['user' => $user, 'token' => $token]);
+        return response()->json(['user' => $user->load('branch'), 'token' => $token]);
     }
 
     public function logout(Request $request)
@@ -59,6 +59,6 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json($request->user()->load('branch'));
     }
 }

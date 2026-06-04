@@ -163,7 +163,9 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import api from '@/composables/useApi'
 import { format, parseISO, subDays } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const activeTab = ref('stock')
 const tabs = [{ id:'stock', label:'Stock Report' }, { id:'sales', label:'Sales Report' }, { id:'expiry', label:'Expiry Report' }]
 
@@ -187,6 +189,7 @@ const expiryReport = ref([]); const expiryLoading = ref(false); const expiryDays
 
 onMounted(() => { fetchStockReport(); fetchSalesReport(); fetchExpiryReport() })
 watch(stockFilter, fetchStockReport)
+watch(() => authStore.activeBranchId, () => { fetchStockReport(); fetchSalesReport(); fetchExpiryReport() })
 
 async function fetchStockReport() {
   stockLoading.value = true

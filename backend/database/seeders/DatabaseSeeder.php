@@ -14,19 +14,44 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Branches
+        $boleBranch = \App\Models\Branch::create([
+            'name' => 'Bole Branch',
+            'address' => 'Bole Road, Addis Ababa',
+            'phone' => '+251911000111',
+            'email' => 'bole@pharmacy.com',
+        ]);
+
+        $piassaBranch = \App\Models\Branch::create([
+            'name' => 'Piassa Branch',
+            'address' => 'Churchill Ave, Addis Ababa',
+            'phone' => '+251911000222',
+            'email' => 'piassa@pharmacy.com',
+        ]);
+
         // Users
-        User::create([
+        $admin = User::create([
             'name'     => 'Admin User',
             'email'    => 'admin@pharmacy.com',
             'password' => Hash::make('password'),
             'role'     => 'admin',
+            'branch_id'=> $boleBranch->id,
         ]);
 
         User::create([
-            'name'     => 'Pharmacist',
+            'name'     => 'Bole Pharmacist',
             'email'    => 'pharmacist@pharmacy.com',
             'password' => Hash::make('password'),
             'role'     => 'pharmacist',
+            'branch_id'=> $boleBranch->id,
+        ]);
+
+        User::create([
+            'name'     => 'Piassa Pharmacist',
+            'email'    => 'pharmacist2@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'pharmacist',
+            'branch_id'=> $piassaBranch->id,
         ]);
 
         // Categories
@@ -72,7 +97,60 @@ class DatabaseSeeder extends Seeder
 
         foreach ($medicines as $med) {
             $med['sku'] = 'MED-' . strtoupper(Str::random(8));
-            Medicine::create($med);
+            $stockQuantity = $med['stock_quantity'];
+            $reorderLevel = $med['reorder_level'];
+            unset($med['stock_quantity'], $med['reorder_level']);
+
+            $medicine = Medicine::create($med);
+
+            // Split stocks: 60% Bole, 40% Piassa
+            $boleStock = (int) ($stockQuantity * 0.6);
+            $piassaStock = $stockQuantity - $boleStock;
+
+            \DB::table('medicine_branch')->insert([
+                [
+                    'medicine_id' => $medicine->id,
+                    'branch_id' => $boleBranch->id,
+                    'stock_quantity' => $boleStock,
+                    'reorder_level' => $reorderLevel,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'medicine_id' => $medicine->id,
+                    'branch_id' => $piassaBranch->id,
+                    'stock_quantity' => $piassaStock,
+                    'reorder_level' => $reorderLevel,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            ]);
+
+            if ($boleStock > 0) {
+                \App\Models\StockMovement::create([
+                    'medicine_id' => $medicine->id,
+                    'branch_id' => $boleBranch->id,
+                    'type' => 'in',
+                    'quantity' => $boleStock,
+                    'quantity_before' => 0,
+                    'quantity_after' => $boleStock,
+                    'notes' => 'Initial stock (Bole)',
+                    'user_id' => $admin->id,
+                ]);
+            }
+
+            if ($piassaStock > 0) {
+                \App\Models\StockMovement::create([
+                    'medicine_id' => $medicine->id,
+                    'branch_id' => $piassaBranch->id,
+                    'type' => 'in',
+                    'quantity' => $piassaStock,
+                    'quantity_before' => 0,
+                    'quantity_after' => $piassaStock,
+                    'notes' => 'Initial stock (Piassa)',
+                    'user_id' => $admin->id,
+                ]);
+            }
         }
     }
 }

@@ -5,10 +5,14 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 })
 
-// Attach token to every request
+// Attach token and active branch context to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  
+  const branchId = localStorage.getItem('activeBranchId')
+  if (branchId) config.headers['X-Branch-Id'] = branchId
+  
   return config
 })
 

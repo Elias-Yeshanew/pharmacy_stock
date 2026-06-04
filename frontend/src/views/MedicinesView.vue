@@ -127,7 +127,9 @@ import { useRoute } from 'vue-router'
 import api from '@/composables/useApi'
 import Modal from '@/components/Modal.vue'
 import { format, parseISO } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const route = useRoute()
 const medicines = ref([])
 const categories = ref([])
@@ -159,7 +161,7 @@ async function fetchMedicines() {
   } finally { loading.value = false }
 }
 
-watch([search, filterCategory, filterStatus], () => { page.value = 1; fetchMedicines() })
+watch([search, filterCategory, filterStatus, () => authStore.activeBranchId], () => { page.value = 1; fetchMedicines() })
 watch(page, fetchMedicines)
 
 function formatDate(d) { return d ? format(parseISO(d), 'dd MMM yyyy') : '—' }

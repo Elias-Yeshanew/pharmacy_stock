@@ -120,7 +120,9 @@ import { ref, watch, onMounted } from 'vue'
 import api from '@/composables/useApi'
 import Modal from '@/components/Modal.vue'
 import { format, parseISO } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const orders = ref([]); const loading = ref(true)
 const page = ref(1); const search = ref(''); const filterStatus = ref('')
 const pagination = ref({ current_page:1, last_page:1, total:0 })
@@ -129,7 +131,7 @@ const selectedOrder = ref(null); const receiveForm = ref([])
 const receiveLoading = ref(false); const receiveError = ref('')
 
 onMounted(fetchOrders)
-watch([search, filterStatus], () => { page.value=1; fetchOrders() })
+watch([search, filterStatus, () => authStore.activeBranchId], () => { page.value=1; fetchOrders() })
 watch(page, fetchOrders)
 
 async function fetchOrders() {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\BranchController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -19,6 +20,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // Branches
+    Route::apiResource('branches', BranchController::class);
 
     // Medicines
     Route::apiResource('medicines', MedicineController::class);

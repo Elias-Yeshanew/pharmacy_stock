@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Traits\BelongsToBranch;
+
 class PurchaseOrder extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToBranch;
 
     protected $fillable = [
         'order_number', 'supplier_id', 'status', 'order_date', 'expected_date',
-        'received_date', 'total_amount', 'notes', 'user_id',
+        'received_date', 'total_amount', 'notes', 'user_id', 'branch_id',
     ];
 
     protected $casts = [

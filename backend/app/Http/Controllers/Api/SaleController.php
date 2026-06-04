@@ -104,19 +104,17 @@ class SaleController extends Controller
                     'total_price' => $item['total_price'],
                 ]);
 
-                $quantityBefore = $item['medicine']->stock_quantity;
-                $item['medicine']->decrement('stock_quantity', $item['quantity']);
-
-                StockMovement::create([
-                    'medicine_id' => $item['medicine']->id,
-                    'type' => 'out',
-                    'quantity' => $item['quantity'],
-                    'quantity_before' => $quantityBefore,
-                    'quantity_after' => $quantityBefore - $item['quantity'],
-                    'reference_number' => $sale->invoice_number,
-                    'notes' => 'Sale: ' . $sale->invoice_number,
-                    'user_id' => auth()->id(),
-                ]);
+                $item['medicine']->adjustStockForBranch(
+                    $sale->branch_id,
+                    $item['quantity'],
+                    'out',
+                    'Sale: ' . $sale->invoice_number,
+                    null,
+                    null,
+                    $sale->invoice_number,
+                    null,
+                    auth()->id()
+                );
             }
 
             return response()->json($sale->load(['items.medicine', 'user']), 201);

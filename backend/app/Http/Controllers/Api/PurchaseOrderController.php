@@ -98,27 +98,23 @@ class PurchaseOrderController extends Controller
                 $item->update(['quantity_received' => $itemData['quantity_received']]);
 
                 if ($itemData['quantity_received'] > 0) {
-                    $medicine = Medicine::lockForUpdate()->findOrFail($item->medicine_id);
-                    $quantityBefore = $medicine->stock_quantity;
-                    $medicine->increment('stock_quantity', $itemData['quantity_received']);
+                    $medicine = Medicine::findOrFail($item->medicine_id);
 
                     if ($item->expiry_date) {
                         $medicine->update(['expiry_date' => $item->expiry_date]);
                     }
 
-                    StockMovement::create([
-                        'medicine_id'      => $item->medicine_id,
-                        'type'             => 'in',
-                        'quantity'         => $itemData['quantity_received'],
-                        'quantity_before'  => $quantityBefore,
-                        'quantity_after'   => $quantityBefore + $itemData['quantity_received'],
-                        'unit_price'       => $item->unit_price,
-                        'reference_number' => $purchaseOrder->order_number,
-                        'batch_number'     => $item->batch_number,
-                        'expiry_date'      => $item->expiry_date,
-                        'notes'            => 'Purchase Order: ' . $purchaseOrder->order_number,
-                        'user_id'          => auth()->id(),
-                    ]);
+                    $medicine->adjustStockForBranch(
+                        $purchaseOrder->branch_id,
+                        $itemData['quantity_received'],
+                        'in',
+                        'Purchase Order: ' . $purchaseOrder->order_number,
+                        $item->batch_number,
+                        $item->expiry_date,
+                        $purchaseOrder->order_number,
+                        $item->unit_price,
+                        auth()->id()
+                    );
                 }
             }
 

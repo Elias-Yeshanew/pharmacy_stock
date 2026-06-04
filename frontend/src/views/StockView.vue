@@ -63,14 +63,16 @@
 import { ref, watch, onMounted } from 'vue'
 import api from '@/composables/useApi'
 import { format, parseISO } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const movements = ref([]); const loading = ref(true)
 const page = ref(1); const search = ref(''); const filterType = ref('')
 const dateFrom = ref(''); const dateTo = ref('')
 const pagination = ref({ current_page:1, last_page:1, total:0 })
 
 onMounted(fetchMovements)
-watch([search, filterType, dateFrom, dateTo], () => { page.value=1; fetchMovements() })
+watch([search, filterType, dateFrom, dateTo, () => authStore.activeBranchId], () => { page.value=1; fetchMovements() })
 watch(page, fetchMovements)
 
 async function fetchMovements() {

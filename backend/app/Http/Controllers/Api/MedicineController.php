@@ -60,24 +60,45 @@ class MedicineController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $stockQuantity = $validated['stock_quantity'];
+        $reorderLevel = $validated['reorder_level'];
+        unset($validated['stock_quantity'], $validated['reorder_level']);
+
         $validated['sku'] = 'MED-' . strtoupper(Str::random(8));
+        $validated['reorder_level'] = $reorderLevel;
 
-        $medicine = Medicine::create($validated);
+        return \DB::transaction(function () use ($validated, $stockQuantity, $reorderLevel) {
+            $medicine = Medicine::create($validated);
 
-        // Record initial stock movement
-        if ($validated['stock_quantity'] > 0) {
-            StockMovement::create([
-                'medicine_id' => $medicine->id,
-                'type' => 'in',
-                'quantity' => $validated['stock_quantity'],
-                'quantity_before' => 0,
-                'quantity_after' => $validated['stock_quantity'],
-                'notes' => 'Initial stock',
-                'user_id' => auth()->id(),
-            ]);
-        }
+            $activeBranchId = \App\Helpers\BranchHelper::getActiveBranchId();
+            if ($activeBranchId) {
+                // Initialize the pivot record
+                \DB::table('medicine_branch')->insert([
+                    'medicine_id' => $medicine->id,
+                    'branch_id' => $activeBranchId,
+                    'stock_quantity' => 0,
+                    'reorder_level' => $reorderLevel,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-        return response()->json($medicine->load(['category', 'supplier']), 201);
+                if ($stockQuantity > 0) {
+                    $medicine->adjustStockForBranch(
+                        $activeBranchId,
+                        $stockQuantity,
+                        'in',
+                        'Initial stock',
+                        null,
+                        $validated['expiry_date'] ?? null,
+                        null,
+                        null,
+                        auth()->id()
+                    );
+                }
+            }
+
+            return response()->json($medicine->load(['category', 'supplier', 'activeBranchStock']), 201);
+        });
     }
 
     public function show(Medicine $medicine)
@@ -104,9 +125,18 @@ class MedicineController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $reorderLevel = $validated['reorder_level'];
         $medicine->update($validated);
 
-        return response()->json($medicine->load(['category', 'supplier']));
+        $activeBranchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        if ($activeBranchId) {
+            \DB::table('medicine_branch')->updateOrInsert(
+                ['medicine_id' => $medicine->id, 'branch_id' => $activeBranchId],
+                ['reorder_level' => $reorderLevel, 'updated_at' => now()]
+            );
+        }
+
+        return response()->json($medicine->load(['category', 'supplier', 'activeBranchStock']));
     }
 
     public function destroy(Medicine $medicine)
@@ -125,31 +155,24 @@ class MedicineController extends Controller
             'expiry_date' => 'nullable|date',
         ]);
 
-        $quantityBefore = $medicine->stock_quantity;
+        try {
+            $activeBranchId = \App\Helpers\BranchHelper::getActiveBranchId();
 
-        if (in_array($validated['type'], ['out', 'expired'])) {
-            if ($medicine->stock_quantity < $validated['quantity']) {
-                return response()->json(['message' => 'Insufficient stock'], 422);
-            }
-            $medicine->stock_quantity -= $validated['quantity'];
-        } else {
-            $medicine->stock_quantity += $validated['quantity'];
+            $medicine->adjustStockForBranch(
+                $activeBranchId,
+                $validated['quantity'],
+                $validated['type'],
+                $validated['notes'] ?? null,
+                $validated['batch_number'] ?? null,
+                $validated['expiry_date'] ?? null,
+                null,
+                null,
+                auth()->id()
+            );
+
+            return response()->json($medicine->fresh());
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
-
-        $medicine->save();
-
-        StockMovement::create([
-            'medicine_id' => $medicine->id,
-            'type' => $validated['type'],
-            'quantity' => $validated['quantity'],
-            'quantity_before' => $quantityBefore,
-            'quantity_after' => $medicine->stock_quantity,
-            'notes' => $validated['notes'] ?? null,
-            'batch_number' => $validated['batch_number'] ?? null,
-            'expiry_date' => $validated['expiry_date'] ?? null,
-            'user_id' => auth()->id(),
-        ]);
-
-        return response()->json($medicine->fresh());
     }
 }

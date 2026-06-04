@@ -45,9 +45,31 @@
     <!-- Main -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top bar -->
+      <!-- Top bar -->
       <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
         <h1 class="text-lg font-semibold text-gray-900">{{ currentTitle }}</h1>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
+          <!-- Branch Switcher for Admin -->
+          <div v-if="authStore.user?.role === 'admin'" class="flex items-center gap-2">
+            <label class="text-xs text-gray-500 font-medium flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              Active Branch:
+            </label>
+            <select 
+              :value="authStore.activeBranchId" 
+              @change="e => authStore.setActiveBranchId(e.target.value)" 
+              class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
+            >
+              <option v-for="b in authStore.branches" :key="b.id" :value="b.id">{{ b.name }}</option>
+            </select>
+          </div>
+          
+          <!-- Branch Badge for Pharmacist/Staff -->
+          <div v-else-if="authStore.user?.branch" class="flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 font-medium px-2.5 py-1 rounded-full">
+            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            {{ authStore.user?.branch?.name }}
+          </div>
+
           <span class="text-xs text-gray-400 font-mono">{{ currentDate }}</span>
         </div>
       </header>
@@ -77,16 +99,22 @@ const authStore  = useAuthStore()
 
 const currentDate = format(new Date(), 'EEE, dd MMM yyyy')
 
-const navItems = [
-  { to: '/dashboard',       label: 'Dashboard',       icon: 'dashboard' },
-  { to: '/medicines',       label: 'Medicines',        icon: 'pill' },
-  { to: '/stock',           label: 'Stock Movements',  icon: 'stock' },
-  { to: '/sales',           label: 'Sales',            icon: 'sales' },
-  { to: '/purchase-orders', label: 'Purchase Orders',  icon: 'orders' },
-  { to: '/suppliers',       label: 'Suppliers',        icon: 'suppliers' },
-  { to: '/categories',      label: 'Categories',       icon: 'categories' },
-  { to: '/reports',         label: 'Reports',          icon: 'reports' },
-]
+const navItems = computed(() => {
+  const items = [
+    { to: '/dashboard',       label: 'Dashboard',       icon: 'dashboard' },
+    { to: '/medicines',       label: 'Medicines',        icon: 'pill' },
+    { to: '/stock',           label: 'Stock Movements',  icon: 'stock' },
+    { to: '/sales',           label: 'Sales',            icon: 'sales' },
+    { to: '/purchase-orders', label: 'Purchase Orders',  icon: 'orders' },
+    { to: '/suppliers',       label: 'Suppliers',        icon: 'suppliers' },
+    { to: '/categories',      label: 'Categories',       icon: 'categories' },
+  ]
+  if (authStore.user?.role === 'admin') {
+    items.push({ to: '/branches', label: 'Branches', icon: 'branches' })
+  }
+  items.push({ to: '/reports',         label: 'Reports',          icon: 'reports' })
+  return items
+})
 
 const titles = {
   '/dashboard':       'Dashboard',
@@ -99,6 +127,7 @@ const titles = {
   '/purchase-orders/new': 'New Purchase Order',
   '/suppliers':       'Suppliers',
   '/categories':      'Categories',
+  '/branches':        'Branches',
   '/reports':         'Reports',
 }
 

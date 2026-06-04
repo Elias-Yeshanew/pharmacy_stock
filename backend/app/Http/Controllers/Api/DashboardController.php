@@ -29,8 +29,13 @@ class DashboardController extends Controller
             ->where('status', 'completed')
             ->sum('total');
 
-        $totalInventoryValue = Medicine::where('is_active', true)
-            ->selectRaw('SUM(stock_quantity * purchase_price) as value')
+        $activeBranchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        $totalInventoryValue = DB::table('medicines')
+            ->join('medicine_branch', 'medicines.id', '=', 'medicine_branch.medicine_id')
+            ->where('medicine_branch.branch_id', $activeBranchId)
+            ->where('medicines.is_active', true)
+            ->whereNull('medicines.deleted_at')
+            ->selectRaw('SUM(medicine_branch.stock_quantity * medicines.purchase_price) as value')
             ->value('value') ?? 0;
 
         $recentMovements = StockMovement::with(['medicine', 'user'])
