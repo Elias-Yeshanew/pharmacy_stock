@@ -56,12 +56,16 @@ Route::middleware('auth:sanctum')->get('/stock-movements', function(\Illuminate\
     return response()->json($query->paginate($request->per_page ?? 20));
 });
 // Temporary Database Verification Route
-Route::get('/db-test', function () {
+Route::get('/db-test', function (\Illuminate\Http\Request $request) {
     try {
         \DB::connection()->getPdo();
         
+        if ($request->has('force_fresh')) {
+            \Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
+            $action = 'Database successfully reset, migrated and seeded!';
+        }
         // Automaticaly run migrations and seeder if database tables are empty
-        if (!\Schema::hasTable('users') || \App\Models\User::count() === 0) {
+        elseif (!\Schema::hasTable('users') || \App\Models\User::count() === 0) {
             \Artisan::call('migrate', ['--force' => true]);
             \Artisan::call('db:seed', ['--force' => true]);
             $action = 'Database successfully migrated and seeded!';

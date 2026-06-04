@@ -104,8 +104,10 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/composables/useApi'
 import { useDebounceFn } from '@vueuse/core'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const medicineSearch = ref(''); const searchResults = ref([])
 const cartItems = ref([])
 const submitting = ref(false); const error = ref('')
@@ -121,6 +123,13 @@ const doSearch = useDebounceFn(async () => {
 }, 300)
 
 watch(medicineSearch, doSearch)
+
+// Clear cart if active branch changes to prevent branch stock mismatch
+watch(() => authStore.activeBranchId, () => {
+  cartItems.value = []
+  searchResults.value = []
+  medicineSearch.value = ''
+})
 
 function addItem(med) {
   if (med.stock_quantity <= 0) return

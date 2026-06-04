@@ -101,8 +101,10 @@ import { useRouter } from 'vue-router'
 import api from '@/composables/useApi'
 import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const suppliers = ref([]); const medicineSearch = ref(''); const searchResults = ref([])
 const orderItems = ref([]); const submitting = ref(false); const error = ref('')
 const form = ref({ supplier_id:'', order_date: format(new Date(),'yyyy-MM-dd'), expected_date:'', notes:'' })
@@ -117,7 +119,15 @@ const doSearch = useDebounceFn(async () => {
   const { data } = await api.get('/medicines', { params:{ search:medicineSearch.value, per_page:8 }})
   searchResults.value = data.data
 }, 300)
+
 watch(medicineSearch, doSearch)
+
+// Clear items if active branch changes to prevent branch stock mismatch
+watch(() => authStore.activeBranchId, () => {
+  orderItems.value = []
+  searchResults.value = []
+  medicineSearch.value = ''
+})
 
 function addItem(med) {
   if (orderItems.value.find(i => i.medicine.id === med.id)) return
