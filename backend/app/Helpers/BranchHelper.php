@@ -13,8 +13,8 @@ class BranchHelper
             return null;
         }
 
-        // Non-admin is strictly locked to their branch
-        if ($user->role !== 'admin') {
+        // Non-global roles (dispenser, pharmacist, cashier) are strictly locked to their branch
+        if (in_array($user->role, ['dispenser', 'pharmacist', 'cashier'])) {
             return $user->branch_id;
         }
 

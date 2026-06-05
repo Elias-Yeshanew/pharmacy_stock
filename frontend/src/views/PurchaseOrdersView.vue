@@ -11,7 +11,7 @@
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
-      <router-link to="/purchase-orders/new" class="btn-primary">
+      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/purchase-orders/new" class="btn-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         New Order
       </router-link>
@@ -44,7 +44,7 @@
               <td class="table-cell">
                 <div class="flex gap-2">
                   <button @click="viewOrder(o)" class="text-primary-600 text-xs font-medium">View</button>
-                  <button v-if="o.status !== 'received' && o.status !== 'cancelled'" @click="openReceive(o)" class="text-green-600 text-xs font-medium">Receive</button>
+                  <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role) && o.status !== 'received' && o.status !== 'cancelled'" @click="openReceive(o)" class="text-green-600 text-xs font-medium">Receive</button>
                 </div>
               </td>
             </tr>

@@ -9,8 +9,8 @@
           {{ tab.label }}
         </button>
       </div>
-      <!-- Branch Filter for Admins -->
-      <div v-if="authStore.user?.role === 'admin'" class="flex items-center gap-2 pb-1">
+      <!-- Branch Filter for Global Roles -->
+      <div v-if="['admin', 'owner', 'ceo', 'sales_manager'].includes(authStore.user?.role)" class="flex items-center gap-2 pb-1">
         <label class="text-xs text-gray-500 font-medium">Report Branch:</label>
         <select v-model="selectedBranch" class="text-xs bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer">
           <option value="all">All Branches</option>

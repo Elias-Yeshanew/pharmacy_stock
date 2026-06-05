@@ -16,7 +16,7 @@
           <option value="expired">Expired</option>
         </select>
       </div>
-      <router-link to="/medicines/new" class="btn-primary">
+      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/medicines/new" class="btn-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Medicine
       </router-link>
@@ -62,9 +62,9 @@
               </td>
               <td class="table-cell">
                 <div class="flex items-center gap-2">
-                  <button @click="openAdjust(med)" class="text-primary-600 hover:text-primary-800 text-xs font-medium">Adjust</button>
-                  <router-link :to="`/medicines/${med.id}/edit`" class="text-gray-500 hover:text-gray-700 text-xs font-medium">Edit</router-link>
-                  <button @click="deleteMedicine(med)" class="text-red-500 hover:text-red-700 text-xs font-medium">Delete</button>
+                  <button v-if="['admin', 'supply_chain_manager', 'dispenser', 'pharmacist'].includes(authStore.user?.role)" @click="openAdjust(med)" class="text-primary-600 hover:text-primary-800 text-xs font-medium">Adjust</button>
+                  <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" :to="`/medicines/${med.id}/edit`" class="text-gray-500 hover:text-gray-700 text-xs font-medium">Edit</router-link>
+                  <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" @click="deleteMedicine(med)" class="text-red-500 hover:text-red-700 text-xs font-medium">Delete</button>
                 </div>
               </td>
             </tr>

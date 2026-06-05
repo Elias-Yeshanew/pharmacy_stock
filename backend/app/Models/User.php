@@ -18,7 +18,10 @@ class User extends Authenticatable
     protected $casts = ['email_verified_at' => 'datetime', 'password' => 'hashed'];
 
     public function isAdmin(): bool { return $this->role === 'admin'; }
-    public function isPharmacist(): bool { return $this->role === 'pharmacist'; }
+    public function isDispenser(): bool { return $this->role === 'dispenser' || $this->role === 'pharmacist'; }
+    public function isSalesManager(): bool { return $this->role === 'sales_manager'; }
+    public function isSupplyChainManager(): bool { return $this->role === 'supply_chain_manager'; }
+    public function isOwnerOrCeo(): bool { return in_array($this->role, ['owner', 'ceo']); }
 
     public function branch()
     {

@@ -70,6 +70,51 @@
       </div>
     </div>
 
+    <!-- Branch Performance Overview (Admin, Owner, CEO only) -->
+    <div v-if="['admin', 'owner', 'ceo'].includes(authStore.user?.role) && branchSummaries.length > 0" class="card">
+      <div class="px-5 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-900 text-sm">Branch Performance Overview</h3>
+        <span class="text-xs text-gray-500 font-medium">All active branches comparison</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="table-header text-left">Branch Name</th>
+              <th class="table-header text-right">Today's Sales</th>
+              <th class="table-header text-right">Monthly Sales</th>
+              <th class="table-header text-right">Inventory Value</th>
+              <th class="table-header text-center">Low Stock Items</th>
+              <th class="table-header text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr v-for="b in branchSummaries" :key="b.id" 
+              class="hover:bg-gray-50 transition-colors"
+              :class="authStore.activeBranchId === String(b.id) ? 'bg-primary-50/50 hover:bg-primary-50 font-medium' : ''">
+              <td class="table-cell">
+                <div class="flex items-center gap-2">
+                  <span v-if="authStore.activeBranchId === String(b.id)" class="w-2 h-2 rounded-full bg-primary-600"></span>
+                  <span class="text-gray-900 font-medium">{{ b.name }}</span>
+                </div>
+              </td>
+              <td class="table-cell text-right font-mono text-gray-900">${{ formatNum(b.today_sales) }}</td>
+              <td class="table-cell text-right font-mono text-gray-900">${{ formatNum(b.month_sales) }}</td>
+              <td class="table-cell text-right font-mono text-gray-900">${{ formatNum(b.inventory_value) }}</td>
+              <td class="table-cell text-center">
+                <span :class="b.low_stock > 0 ? 'badge-yellow font-mono' : 'text-gray-400 text-sm font-mono'">{{ b.low_stock || '0' }}</span>
+              </td>
+              <td class="table-cell text-center">
+                <span :class="authStore.activeBranchId === String(b.id) ? 'text-primary-700 text-xs font-semibold' : 'text-gray-400 text-xs'">
+                  {{ authStore.activeBranchId === String(b.id) ? 'Active View' : 'Other Branch' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Recent Movements -->
     <div class="card">
       <div class="px-5 pt-5 pb-3 border-b border-gray-100">
@@ -118,6 +163,7 @@ const stats = ref({ total_medicines:0, low_stock:0, out_of_stock:0, expiring_soo
 const lowStockMedicines = ref([])
 const expiringSoon = ref([])
 const recentMovements = ref([])
+const branchSummaries = ref([])
 const loading = ref(true)
 
 onMounted(fetchDashboardData)
@@ -132,6 +178,7 @@ async function fetchDashboardData() {
     lowStockMedicines.value = data.low_stock_medicines
     expiringSoon.value = data.expiring_soon
     recentMovements.value = data.recent_movements
+    branchSummaries.value = data.branch_summaries || []
   } finally { loading.value = false }
 }
 

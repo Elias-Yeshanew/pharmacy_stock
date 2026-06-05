@@ -6,7 +6,7 @@
         <input v-model="dateFrom" type="date" class="input w-40" />
         <input v-model="dateTo" type="date" class="input w-40" />
       </div>
-      <router-link to="/sales/new" class="btn-primary">
+      <router-link v-if="['admin', 'sales_manager', 'dispenser', 'pharmacist', 'cashier'].includes(authStore.user?.role)" to="/sales/new" class="btn-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         New Sale
       </router-link>

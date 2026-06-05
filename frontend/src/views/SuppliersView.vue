@@ -2,7 +2,7 @@
   <div class="space-y-5">
     <div class="flex items-center justify-between">
       <input v-model="search" type="text" class="input w-64" placeholder="Search suppliers…" />
-      <button @click="openCreate" class="btn-primary">
+      <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" @click="openCreate" class="btn-primary">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Supplier
       </button>
@@ -22,7 +22,7 @@
         </div>
         <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
           <span class="text-xs text-gray-400">{{ s.medicines_count }} medicines</span>
-          <div class="flex gap-2">
+          <div v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" class="flex gap-2">
             <button @click="openEdit(s)" class="text-xs text-primary-600 hover:text-primary-800 font-medium">Edit</button>
             <button @click="deleteSupplier(s)" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
           </div>
@@ -55,6 +55,9 @@
 import { ref, watch, onMounted } from 'vue'
 import api from '@/composables/useApi'
 import Modal from '@/components/Modal.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const suppliers = ref([]); const search = ref('')
 const showModal = ref(false); const editingId = ref(null)

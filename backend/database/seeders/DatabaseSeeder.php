@@ -35,23 +35,55 @@ class DatabaseSeeder extends Seeder
             'email'    => 'admin@pharmacy.com',
             'password' => Hash::make('password'),
             'role'     => 'admin',
+            'branch_id'=> null,
+        ]);
+
+        User::create([
+            'name'     => 'Bole Dispenser',
+            'email'    => 'dispenser@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'dispenser',
             'branch_id'=> $boleBranch->id,
         ]);
 
         User::create([
-            'name'     => 'Bole Pharmacist',
-            'email'    => 'pharmacist@pharmacy.com',
+            'name'     => 'Piassa Dispenser',
+            'email'    => 'dispenser2@pharmacy.com',
             'password' => Hash::make('password'),
-            'role'     => 'pharmacist',
-            'branch_id'=> $boleBranch->id,
-        ]);
-
-        User::create([
-            'name'     => 'Piassa Pharmacist',
-            'email'    => 'pharmacist2@pharmacy.com',
-            'password' => Hash::make('password'),
-            'role'     => 'pharmacist',
+            'role'     => 'dispenser',
             'branch_id'=> $piassaBranch->id,
+        ]);
+
+        User::create([
+            'name'     => 'Company Owner',
+            'email'    => 'owner@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'owner',
+            'branch_id'=> null,
+        ]);
+
+        User::create([
+            'name'     => 'CEO User',
+            'email'    => 'ceo@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'ceo',
+            'branch_id'=> null,
+        ]);
+
+        User::create([
+            'name'     => 'Supply Chain Manager',
+            'email'    => 'supply@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'supply_chain_manager',
+            'branch_id'=> null,
+        ]);
+
+        User::create([
+            'name'     => 'Sales Manager',
+            'email'    => 'sales@pharmacy.com',
+            'password' => Hash::make('password'),
+            'role'     => 'sales_manager',
+            'branch_id'=> null,
         ]);
 
         // Categories
