@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Stat Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <StatCard label="Total Medicines" :value="stats.total_medicines" icon="pill" color="blue" />
       <StatCard label="Low Stock" :value="stats.low_stock" icon="warning" color="yellow" :to="'/medicines?stock_status=low_stock'" />
       <StatCard label="Out of Stock" :value="stats.out_of_stock" icon="error" color="red" :to="'/medicines?stock_status=out_of_stock'" />
@@ -9,18 +9,18 @@
     </div>
 
     <!-- Revenue Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="card p-5">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div class="card p-4 sm:p-5">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Today's Sales</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.today_sales) }}</p>
+        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.today_sales) }}</p>
       </div>
-      <div class="card p-5">
+      <div class="card p-4 sm:p-5">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">This Month</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.month_sales) }}</p>
+        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.month_sales) }}</p>
       </div>
-      <div class="card p-5">
+      <div class="card p-4 sm:p-5">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Inventory Value</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.inventory_value) }}</p>
+        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${{ formatNum(stats.inventory_value) }}</p>
       </div>
     </div>
 
@@ -77,7 +77,7 @@
         <span class="text-xs text-gray-500 font-medium">All active branches comparison</span>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[550px]">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
               <th class="table-header text-left">Branch Name</th>
@@ -121,7 +121,7 @@
         <h3 class="font-semibold text-gray-900 text-sm">Recent Stock Movements</h3>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[500px]">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
               <th class="table-header">Medicine</th>

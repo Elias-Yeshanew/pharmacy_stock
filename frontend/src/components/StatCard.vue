@@ -1,14 +1,14 @@
 <template>
   <component :is="to ? 'router-link' : 'div'" :to="to"
-    class="card p-5 transition-all hover:shadow-md"
+    class="card p-3.5 sm:p-5 transition-all hover:shadow-md"
     :class="to ? 'cursor-pointer hover:-translate-y-0.5' : ''">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ label }}</p>
-        <p class="text-3xl font-bold mt-1" :class="valueColor">{{ value ?? '—' }}</p>
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0 flex-1">
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{{ label }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 truncate" :class="valueColor">{{ value ?? '—' }}</p>
       </div>
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center" :class="bgColor">
-        <component :is="iconComponent" class="w-5 h-5" :class="iconColor" />
+      <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" :class="bgColor">
+        <component :is="iconComponent" class="w-4 h-4 sm:w-5 sm:h-5" :class="iconColor" />
       </div>
     </div>
   </component>

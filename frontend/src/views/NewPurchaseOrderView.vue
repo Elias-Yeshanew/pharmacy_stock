@@ -29,25 +29,36 @@
             Search and add medicines above
           </div>
           <div v-else class="space-y-2">
-            <div v-for="(item, idx) in orderItems" :key="idx" class="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
-              <div class="col-span-4">
-                <p class="text-sm font-medium text-gray-900">{{ item.medicine.name }}</p>
-                <p class="text-xs text-gray-500">{{ item.medicine.strength }}</p>
+            <div v-for="(item, idx) in orderItems" :key="idx" class="p-3 bg-gray-50 rounded-lg space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center">
+              <div class="sm:col-span-4 flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-900">{{ item.medicine.name }}</p>
+                  <p class="text-xs text-gray-500">{{ item.medicine.dosage_form }} {{ item.medicine.strength }}</p>
+                </div>
+                <!-- Delete on mobile -->
+                <button @click="removeItem(idx)" class="sm:hidden text-red-400 hover:text-red-600 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
               </div>
-              <div class="col-span-2">
-                <label class="text-xs text-gray-500 mb-0.5 block">Qty</label>
-                <input v-model.number="item.quantity_ordered" type="number" min="1" class="input text-center text-sm" @change="recalc" />
+
+              <div class="grid grid-cols-3 sm:contents gap-2 items-center">
+                <div class="sm:col-span-2">
+                  <label class="text-[11px] text-gray-500 mb-0.5 block">Qty</label>
+                  <input v-model.number="item.quantity_ordered" type="number" min="1" class="input text-center text-sm py-1.5" @change="recalc" />
+                </div>
+                <div class="sm:col-span-3">
+                  <label class="text-[11px] text-gray-500 mb-0.5 block">Price ($)</label>
+                  <input v-model.number="item.unit_price" type="number" step="0.01" min="0" class="input text-sm py-1.5" @change="recalc" />
+                </div>
+                <div class="sm:col-span-2 text-right">
+                  <label class="text-[11px] text-gray-500 mb-0.5 block">Total</label>
+                  <p class="text-sm font-semibold text-gray-900 py-1.5 font-mono">${{ (item.quantity_ordered * item.unit_price).toFixed(2) }}</p>
+                </div>
               </div>
-              <div class="col-span-3">
-                <label class="text-xs text-gray-500 mb-0.5 block">Unit Price ($)</label>
-                <input v-model.number="item.unit_price" type="number" step="0.01" min="0" class="input text-sm" @change="recalc" />
-              </div>
-              <div class="col-span-2 text-right">
-                <label class="text-xs text-gray-500 mb-0.5 block">Total</label>
-                <p class="text-sm font-semibold text-gray-900">${{ (item.quantity_ordered * item.unit_price).toFixed(2) }}</p>
-              </div>
-              <div class="col-span-1 flex justify-end">
-                <button @click="removeItem(idx)" class="text-red-400 hover:text-red-600">
+
+              <!-- Delete on desktop -->
+              <div class="hidden sm:flex sm:col-span-1 justify-end">
+                <button @click="removeItem(idx)" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>

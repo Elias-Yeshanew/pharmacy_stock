@@ -35,16 +35,21 @@
             Search and add medicines above
           </div>
           <div v-else class="space-y-2">
-            <div v-for="(item, idx) in cartItems" :key="idx" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">{{ item.medicine.name }}</p>
-                <p class="text-xs text-gray-500">{{ item.medicine.dosage_form }} {{ item.medicine.strength }}</p>
+            <div v-for="(item, idx) in cartItems" :key="idx" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-gray-50 rounded-lg">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ item.medicine.name }}</p>
+                <p class="text-xs text-gray-500">{{ item.medicine.dosage_form }} {{ item.medicine.strength }} · ${{ item.unit_price }} each</p>
               </div>
-              <input v-model.number="item.quantity" type="number" min="1" :max="item.medicine.stock_quantity" class="input w-20 text-center text-sm" @change="updateItem(idx)" />
-              <div class="text-sm font-semibold text-gray-900 w-20 text-right">${{ (item.unit_price * item.quantity).toFixed(2) }}</div>
-              <button @click="removeItem(idx)" class="text-red-400 hover:text-red-600">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
+              <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-400 sm:hidden">Qty:</span>
+                  <input v-model.number="item.quantity" type="number" min="1" :max="item.medicine.stock_quantity" class="input w-16 text-center text-sm py-1" @change="updateItem(idx)" />
+                </div>
+                <div class="text-sm font-bold text-gray-900 text-right font-mono min-w-[60px]">${{ (item.unit_price * item.quantity).toFixed(2) }}</div>
+                <button @click="removeItem(idx)" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50" title="Remove item">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

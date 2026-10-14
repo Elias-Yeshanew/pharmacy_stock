@@ -1,20 +1,62 @@
 <template>
   <div class="space-y-5">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h2 class="text-xl font-bold text-gray-900">User Management</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900">User Management</h2>
         <p class="text-xs text-gray-500 mt-0.5">Register, update roles, and manage system access.</p>
       </div>
-      <button @click="openAddModal" class="btn-primary flex items-center gap-2">
+      <button @click="openAddModal" class="btn-primary w-full sm:w-auto justify-center flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add User
       </button>
     </div>
 
-    <!-- Users Table -->
+    <!-- Users Content (Cards on mobile, Table on desktop) -->
     <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Mobile Cards List -->
+      <div class="md:hidden divide-y divide-gray-100">
+        <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Loading users…</div>
+        <div v-else-if="users.length === 0" class="py-12 text-center text-gray-400 text-sm">No users found</div>
+        <div v-for="u in users" :key="u.id" class="p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                {{ u.name[0].toUpperCase() }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-semibold text-gray-900 text-sm truncate">{{ u.name }}</span>
+                  <span v-if="authStore.user?.id === u.id" class="text-[10px] bg-primary-50 text-primary-700 font-bold px-1.5 py-0.5 rounded-full">You</span>
+                </div>
+                <p class="text-xs text-gray-500 truncate">{{ u.email }}</p>
+              </div>
+            </div>
+            <span :class="roleBadgeClass(u.role)" class="flex-shrink-0">{{ roleLabel(u.role) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs bg-gray-50 rounded-lg p-2.5">
+            <span class="text-gray-500">Branch:</span>
+            <span v-if="u.branch" class="text-gray-900 font-medium truncate max-w-[200px]">{{ u.branch.name }}</span>
+            <span v-else class="text-gray-400 italic">Global (All Branches)</span>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button @click="openEditModal(u)" class="btn btn-secondary btn-sm py-1 px-3 text-xs text-primary-700">Edit</button>
+            <button 
+              @click="deleteUser(u)" 
+              class="btn btn-secondary btn-sm py-1 px-3 text-xs text-red-600"
+              :disabled="authStore.user?.id === u.id"
+              :class="authStore.user?.id === u.id ? 'opacity-40 cursor-not-allowed' : ''"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>

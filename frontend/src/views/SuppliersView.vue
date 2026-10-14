@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-5">
-    <div class="flex items-center justify-between">
-      <input v-model="search" type="text" class="input w-64" placeholder="Search suppliers…" />
-      <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" @click="openCreate" class="btn-primary">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <input v-model="search" type="text" class="input w-full sm:w-64" placeholder="Search suppliers…" />
+      <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" @click="openCreate" class="btn-primary w-full sm:w-auto justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Supplier
       </button>

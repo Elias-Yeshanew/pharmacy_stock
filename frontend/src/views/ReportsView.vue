@@ -1,18 +1,18 @@
 <template>
   <div class="space-y-6">
     <!-- Report tabs and Branch Filter -->
-    <div class="flex items-center justify-between border-b border-gray-200">
-      <div class="flex gap-2">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 gap-3 pb-2 sm:pb-0">
+      <div class="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar -mb-px">
         <button v-for="tab in tabs" :key="tab.id" @click="activeTab=tab.id"
-          class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+          class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-colors"
           :class="activeTab===tab.id ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'">
           {{ tab.label }}
         </button>
       </div>
       <!-- Branch Filter for Global Roles -->
-      <div v-if="['admin', 'owner', 'ceo', 'sales_manager'].includes(authStore.user?.role)" class="flex items-center gap-2 pb-1">
-        <label class="text-xs text-gray-500 font-medium">Report Branch:</label>
-        <select v-model="selectedBranch" class="text-xs bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer">
+      <div v-if="['admin', 'owner', 'ceo', 'sales_manager'].includes(authStore.user?.role)" class="flex items-center gap-2 pb-1 sm:pb-0">
+        <label class="text-xs text-gray-500 font-medium">Branch:</label>
+        <select v-model="selectedBranch" class="text-xs bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer flex-1 sm:flex-none">
           <option value="all">All Branches</option>
           <option v-for="b in authStore.branches" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
@@ -21,22 +21,22 @@
 
     <!-- Stock Report -->
     <div v-if="activeTab==='stock'">
-      <div class="flex flex-wrap gap-2 mb-4">
-        <select v-model="stockFilter" class="input w-44">
+      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+        <select v-model="stockFilter" class="input w-full sm:w-44 text-xs sm:text-sm">
           <option value="all">All Medicines</option>
           <option value="low_stock">Low Stock</option>
           <option value="out_of_stock">Out of Stock</option>
           <option value="expiring_soon">Expiring Soon</option>
           <option value="expired">Expired</option>
         </select>
-        <button @click="exportCSV('stock')" class="btn-secondary">
+        <button @click="exportCSV('stock')" class="btn-secondary w-full sm:w-auto justify-center">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Export CSV
         </button>
       </div>
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[650px]">
             <thead class="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th class="table-header">Medicine</th>
@@ -76,25 +76,25 @@
 
     <!-- Sales Report -->
     <div v-if="activeTab==='sales'">
-      <div class="flex flex-wrap items-center gap-2 mb-4">
-        <input v-model="salesDateFrom" type="date" class="input w-40" />
-        <input v-model="salesDateTo" type="date" class="input w-40" />
-        <button @click="fetchSalesReport" class="btn-primary">Generate</button>
-        <button @click="exportCSV('sales')" class="btn-secondary">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 mb-4">
+        <input v-model="salesDateFrom" type="date" class="input w-full sm:w-40 text-xs sm:text-sm" />
+        <input v-model="salesDateTo" type="date" class="input w-full sm:w-40 text-xs sm:text-sm" />
+        <button @click="fetchSalesReport" class="btn-primary w-full sm:w-auto justify-center">Generate</button>
+        <button @click="exportCSV('sales')" class="btn-secondary w-full sm:w-auto justify-center col-span-2 sm:col-span-1">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Export CSV
         </button>
       </div>
       <!-- Summary cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-        <div class="card p-4"><p class="text-xs text-gray-500 uppercase font-semibold">Total Sales</p><p class="text-2xl font-bold text-gray-900 mt-1">{{ salesSummary.count }}</p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500 uppercase font-semibold">Revenue</p><p class="text-2xl font-bold text-primary-700 mt-1">${{ formatNum(salesSummary.revenue) }}</p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500 uppercase font-semibold">Avg Sale</p><p class="text-2xl font-bold text-gray-900 mt-1">${{ formatNum(salesSummary.avg) }}</p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500 uppercase font-semibold">Items Sold</p><p class="text-2xl font-bold text-gray-900 mt-1">{{ salesSummary.items }}</p></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        <div class="card p-3.5 sm:p-4"><p class="text-[11px] sm:text-xs text-gray-500 uppercase font-semibold">Total Sales</p><p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ salesSummary.count }}</p></div>
+        <div class="card p-3.5 sm:p-4"><p class="text-[11px] sm:text-xs text-gray-500 uppercase font-semibold">Revenue</p><p class="text-xl sm:text-2xl font-bold text-primary-700 mt-1">${{ formatNum(salesSummary.revenue) }}</p></div>
+        <div class="card p-3.5 sm:p-4"><p class="text-[11px] sm:text-xs text-gray-500 uppercase font-semibold">Avg Sale</p><p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${{ formatNum(salesSummary.avg) }}</p></div>
+        <div class="card p-3.5 sm:p-4"><p class="text-[11px] sm:text-xs text-gray-500 uppercase font-semibold">Items Sold</p><p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ salesSummary.items }}</p></div>
       </div>
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[650px]">
             <thead class="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th class="table-header">Invoice</th>
@@ -127,9 +127,9 @@
 
     <!-- Expiry Report -->
     <div v-if="activeTab==='expiry'">
-      <div class="flex items-center gap-2 mb-4">
-        <label class="text-sm text-gray-600">Show medicines expiring within</label>
-        <select v-model="expiryDays" class="input w-32" @change="fetchExpiryReport">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <label class="text-xs sm:text-sm text-gray-600">Show medicines expiring within</label>
+        <select v-model="expiryDays" class="input w-full sm:w-36 text-xs sm:text-sm" @change="fetchExpiryReport">
           <option :value="30">30 days</option>
           <option :value="60">60 days</option>
           <option :value="90">90 days</option>
@@ -139,7 +139,7 @@
       </div>
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[650px]">
             <thead class="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th class="table-header">Medicine</th>

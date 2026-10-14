@@ -8,7 +8,7 @@
     </div>
 
     <form @submit.prevent="submitForm" class="space-y-6">
-      <div class="card p-6 space-y-5">
+      <div class="card p-4 sm:p-6 space-y-5">
         <h3 class="font-medium text-gray-900 text-sm border-b pb-2">Basic Information</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -58,7 +58,7 @@
         </div>
       </div>
 
-      <div class="card p-6 space-y-5">
+      <div class="card p-4 sm:p-6 space-y-5">
         <h3 class="font-medium text-gray-900 text-sm border-b pb-2">Pricing & Stock</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -92,16 +92,16 @@
         </div>
       </div>
 
-      <div class="card p-6 space-y-3">
+      <div class="card p-4 sm:p-6 space-y-3">
         <h3 class="font-medium text-gray-900 text-sm border-b pb-2">Additional Notes</h3>
         <textarea v-model="form.description" class="input" rows="3" placeholder="Optional description or notes…"></textarea>
       </div>
 
       <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{{ error }}</div>
 
-      <div class="flex items-center justify-end gap-3">
-        <router-link to="/medicines" class="btn-secondary">Cancel</router-link>
-        <button type="submit" class="btn-primary" :disabled="loading">
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+        <router-link to="/medicines" class="btn-secondary justify-center">Cancel</router-link>
+        <button type="submit" class="btn-primary justify-center" :disabled="loading">
           {{ loading ? 'Saving…' : (isEdit ? 'Update Medicine' : 'Add Medicine') }}
         </button>
       </div>

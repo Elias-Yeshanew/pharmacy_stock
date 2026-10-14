@@ -1,30 +1,72 @@
 <template>
   <div class="space-y-5">
     <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <input v-model="search" type="text" class="input w-64" placeholder="Search medicines…" />
-        <select v-model="filterCategory" class="input w-44">
-          <option value="">All Categories</option>
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
-        <select v-model="filterStatus" class="input w-44">
-          <option value="">All Stock Status</option>
-          <option value="low_stock">Low Stock</option>
-          <option value="out_of_stock">Out of Stock</option>
-          <option value="expiring_soon">Expiring Soon</option>
-          <option value="expired">Expired</option>
-        </select>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 flex-1">
+        <input v-model="search" type="text" class="input w-full sm:w-56 md:w-64" placeholder="Search medicines…" />
+        <div class="grid grid-cols-2 sm:flex gap-2">
+          <select v-model="filterCategory" class="input w-full sm:w-40 md:w-44 text-xs sm:text-sm">
+            <option value="">All Categories</option>
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+          <select v-model="filterStatus" class="input w-full sm:w-40 md:w-44 text-xs sm:text-sm">
+            <option value="">All Status</option>
+            <option value="low_stock">Low Stock</option>
+            <option value="out_of_stock">Out of Stock</option>
+            <option value="expiring_soon">Expiring Soon</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
       </div>
-      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/medicines/new" class="btn-primary">
+      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/medicines/new" class="btn-primary w-full sm:w-auto justify-center flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add Medicine
       </router-link>
     </div>
 
-    <!-- Table -->
+    <!-- Medicines Content (Cards on mobile, Table on desktop) -->
     <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Mobile Cards List -->
+      <div class="md:hidden divide-y divide-gray-100">
+        <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Loading…</div>
+        <div v-else-if="medicines.length === 0" class="py-12 text-center text-gray-400 text-sm">No medicines found</div>
+        <div v-for="med in medicines" :key="med.id" class="p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <h4 class="font-semibold text-gray-900 text-sm truncate">{{ med.name }}</h4>
+              <p class="text-xs text-gray-500 truncate">{{ med.generic_name }} · {{ med.sku }}</p>
+            </div>
+            <span :class="statusBadge(med.stock_status)" class="flex-shrink-0">{{ statusLabel(med.stock_status) }}</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-2.5">
+            <div>
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Stock</span>
+              <span class="font-mono font-bold text-gray-900 text-sm">{{ med.stock_quantity }} <span class="text-xs font-normal text-gray-500">{{ med.unit }}</span></span>
+            </div>
+            <div>
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Price</span>
+              <span class="font-bold text-primary-700 text-sm">${{ med.selling_price }}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Expiry</span>
+              <span class="font-medium truncate block text-gray-700">{{ med.expiry_date ? formatDate(med.expiry_date) : '—' }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <span class="text-xs text-gray-500 truncate flex-1">{{ med.category?.name }} · {{ med.dosage_form }}</span>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <button v-if="['admin', 'supply_chain_manager', 'dispenser', 'pharmacist'].includes(authStore.user?.role)" @click="openAdjust(med)" class="btn btn-secondary btn-sm py-1 px-2.5 text-xs text-primary-700">Adjust</button>
+              <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" :to="`/medicines/${med.id}/edit`" class="btn btn-secondary btn-sm py-1 px-2.5 text-xs text-gray-700">Edit</router-link>
+              <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" @click="deleteMedicine(med)" class="btn btn-secondary btn-sm py-1 px-2.5 text-xs text-red-600">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -71,12 +113,13 @@
           </tbody>
         </table>
       </div>
+
       <!-- Pagination -->
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
         <p class="text-xs text-gray-500">Page {{ pagination.current_page }} of {{ pagination.last_page }} ({{ pagination.total }} total)</p>
-        <div class="flex gap-1">
-          <button @click="page--" :disabled="page === 1" class="btn btn-secondary btn-sm">Prev</button>
-          <button @click="page++" :disabled="page === pagination.last_page" class="btn btn-secondary btn-sm">Next</button>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button @click="page--" :disabled="page === 1" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Prev</button>
+          <button @click="page++" :disabled="page === pagination.last_page" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Next</button>
         </div>
       </div>
     </div>

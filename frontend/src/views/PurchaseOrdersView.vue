@@ -1,9 +1,10 @@
 <template>
   <div class="space-y-5">
-    <div class="flex items-center justify-between">
-      <div class="flex gap-2">
-        <input v-model="search" type="text" class="input w-56" placeholder="Search order number…" />
-        <select v-model="filterStatus" class="input w-40">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 flex-1">
+        <input v-model="search" type="text" class="input w-full sm:w-56" placeholder="Search order number…" />
+        <select v-model="filterStatus" class="input w-full sm:w-40 text-xs sm:text-sm">
           <option value="">All Status</option>
           <option value="pending">Pending</option>
           <option value="ordered">Ordered</option>
@@ -11,14 +12,50 @@
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
-      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/purchase-orders/new" class="btn-primary">
+      <router-link v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role)" to="/purchase-orders/new" class="btn-primary w-full sm:w-auto justify-center flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         New Order
       </router-link>
     </div>
 
+    <!-- PO Content (Cards on mobile, Table on desktop) -->
     <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Mobile Cards List -->
+      <div class="md:hidden divide-y divide-gray-100">
+        <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Loading…</div>
+        <div v-else-if="orders.length === 0" class="py-12 text-center text-gray-400 text-sm">No purchase orders found</div>
+        <div v-for="o in orders" :key="o.id" class="p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-mono text-xs font-bold text-primary-700">{{ o.order_number }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">Ordered: {{ formatDate(o.order_date) }}</p>
+            </div>
+            <span :class="statusBadge(o.status)">{{ o.status }}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-gray-700 bg-gray-50 rounded-lg p-2.5">
+            <div>
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Supplier</span>
+              <p class="font-medium text-gray-900">{{ o.supplier?.name }}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Total</span>
+              <p class="font-bold text-primary-700 text-sm">${{ o.total_amount }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 text-xs">
+            <span class="text-gray-500">Expected: {{ formatDate(o.expected_date) || '—' }}</span>
+            <div class="flex items-center gap-1.5">
+              <button @click="viewOrder(o)" class="btn btn-secondary btn-sm py-1 px-3 text-xs text-primary-700">View</button>
+              <button v-if="['admin', 'supply_chain_manager'].includes(authStore.user?.role) && o.status !== 'received' && o.status !== 'cancelled'" @click="openReceive(o)" class="btn btn-secondary btn-sm py-1 px-3 text-xs text-green-700">Receive</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -51,11 +88,13 @@
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
+
+      <!-- Pagination -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
         <p class="text-xs text-gray-500">Page {{ pagination.current_page }} of {{ pagination.last_page }}</p>
-        <div class="flex gap-1">
-          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm">Prev</button>
-          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm">Next</button>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Prev</button>
+          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Next</button>
         </div>
       </div>
     </div>

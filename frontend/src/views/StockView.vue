@@ -1,8 +1,9 @@
 <template>
   <div class="space-y-5">
-    <div class="flex flex-wrap items-center gap-2">
-      <input v-model="search" type="text" class="input w-64" placeholder="Search by medicine or reference…" />
-      <select v-model="filterType" class="input w-40">
+    <!-- Filters -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-2">
+      <input v-model="search" type="text" class="input w-full lg:w-64" placeholder="Search by medicine or reference…" />
+      <select v-model="filterType" class="input w-full lg:w-40 text-xs sm:text-sm">
         <option value="">All Types</option>
         <option value="in">Stock In</option>
         <option value="out">Stock Out</option>
@@ -10,12 +11,49 @@
         <option value="return">Return</option>
         <option value="expired">Expired</option>
       </select>
-      <input v-model="dateFrom" type="date" class="input w-40" />
-      <input v-model="dateTo" type="date" class="input w-40" />
+      <input v-model="dateFrom" type="date" class="input w-full sm:w-auto text-xs sm:text-sm" />
+      <input v-model="dateTo" type="date" class="input w-full sm:w-auto text-xs sm:text-sm" />
     </div>
 
+    <!-- Stock Content (Cards on mobile, Table on desktop) -->
     <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Mobile Cards List -->
+      <div class="md:hidden divide-y divide-gray-100">
+        <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Loading…</div>
+        <div v-else-if="movements.length === 0" class="py-12 text-center text-gray-400 text-sm">No movements found</div>
+        <div v-for="m in movements" :key="m.id" class="p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <h4 class="font-semibold text-gray-900 text-sm truncate flex-1">{{ m.medicine?.name }}</h4>
+            <span :class="typeBadge(m.type)" class="flex-shrink-0">{{ m.type }}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 rounded-lg p-2.5">
+            <div>
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Change</span>
+              <span class="font-mono font-bold text-sm" :class="m.type === 'in' ? 'text-green-700' : 'text-red-700'">
+                {{ m.type === 'in' ? '+' : '-' }}{{ m.quantity }}
+              </span>
+            </div>
+            <div>
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Before → After</span>
+              <span class="font-mono text-gray-700 font-medium">{{ m.quantity_before }} → {{ m.quantity_after }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-gray-500 pt-1">
+            <span>By: <strong class="text-gray-700 font-medium">{{ m.user?.name || 'System' }}</strong></span>
+            <span class="text-gray-400 text-[11px]">{{ formatDate(m.created_at) }}</span>
+          </div>
+
+          <div v-if="m.reference_number || m.batch_number" class="text-[11px] text-gray-400 flex gap-3">
+            <span v-if="m.reference_number">Ref: {{ m.reference_number }}</span>
+            <span v-if="m.batch_number">Batch: {{ m.batch_number }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -49,11 +87,13 @@
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
+
+      <!-- Pagination -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
         <p class="text-xs text-gray-500">Page {{ pagination.current_page }} of {{ pagination.last_page }}</p>
-        <div class="flex gap-1">
-          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm">Prev</button>
-          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm">Next</button>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Prev</button>
+          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Next</button>
         </div>
       </div>
     </div>

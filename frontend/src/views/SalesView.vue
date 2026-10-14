@@ -1,19 +1,57 @@
 <template>
   <div class="space-y-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <input v-model="search" type="text" class="input w-64" placeholder="Search by invoice or customer…" />
-        <input v-model="dateFrom" type="date" class="input w-40" />
-        <input v-model="dateTo" type="date" class="input w-40" />
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 flex-1">
+        <input v-model="search" type="text" class="input w-full sm:w-56 md:w-64" placeholder="Search by invoice or customer…" />
+        <div class="grid grid-cols-2 sm:flex gap-2">
+          <input v-model="dateFrom" type="date" class="input w-full sm:w-36 md:w-40 text-xs sm:text-sm" />
+          <input v-model="dateTo" type="date" class="input w-full sm:w-36 md:w-40 text-xs sm:text-sm" />
+        </div>
       </div>
-      <router-link v-if="['admin', 'sales_manager', 'dispenser', 'pharmacist', 'cashier'].includes(authStore.user?.role)" to="/sales/new" class="btn-primary">
+      <router-link v-if="['admin', 'sales_manager', 'dispenser', 'pharmacist', 'cashier'].includes(authStore.user?.role)" to="/sales/new" class="btn-primary w-full sm:w-auto justify-center flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         New Sale
       </router-link>
     </div>
 
+    <!-- Sales Content (Cards on mobile, Table on desktop) -->
     <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Mobile Cards List -->
+      <div class="md:hidden divide-y divide-gray-100">
+        <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Loading…</div>
+        <div v-else-if="sales.length === 0" class="py-12 text-center text-gray-400 text-sm">No sales found</div>
+        <div v-for="sale in sales" :key="sale.id" class="p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-mono text-xs font-bold text-primary-700">{{ sale.invoice_number }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(sale.created_at) }}</p>
+            </div>
+            <span :class="sale.status === 'completed' ? 'badge-green' : 'badge-yellow'">{{ sale.status }}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-gray-700 bg-gray-50 rounded-lg p-2.5">
+            <div>
+              <p class="font-medium text-gray-900">{{ sale.customer_name || 'Walk-in Customer' }}</p>
+              <p class="text-gray-400 text-[11px]">{{ sale.customer_phone || 'No phone' }}</p>
+            </div>
+            <div class="text-right">
+              <span class="badge-blue capitalize text-[11px]">{{ sale.payment_method?.replace('_',' ') }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <span class="text-xs text-gray-500 mr-2">{{ sale.items?.length }} items</span>
+              <span class="text-base font-bold text-gray-900">${{ sale.total }}</span>
+            </div>
+            <button @click="viewSale(sale)" class="btn btn-secondary btn-sm py-1 px-3 text-xs text-primary-700">View Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -47,11 +85,13 @@
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
+
+      <!-- Pagination -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-5 py-3 border-t border-gray-100" v-if="pagination.last_page > 1">
         <p class="text-xs text-gray-500">Page {{ pagination.current_page }} of {{ pagination.last_page }} ({{ pagination.total }} total)</p>
-        <div class="flex gap-1">
-          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm">Prev</button>
-          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm">Next</button>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button @click="page--" :disabled="page===1" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Prev</button>
+          <button @click="page++" :disabled="page===pagination.last_page" class="btn btn-secondary btn-sm flex-1 sm:flex-none justify-center">Next</button>
         </div>
       </div>
     </div>
