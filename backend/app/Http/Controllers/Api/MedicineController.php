@@ -12,7 +12,15 @@ class MedicineController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Medicine::with(['category', 'supplier'])->where('is_active', true);
+        $activeBranchId = \App\Helpers\BranchHelper::getActiveBranchId();
+        $relations = ['category:id,name', 'supplier:id,name'];
+        if ($activeBranchId) {
+            $relations[] = 'activeBranchStock';
+        } else {
+            $relations[] = 'branchStocks';
+        }
+
+        $query = Medicine::with($relations)->where('is_active', true);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {

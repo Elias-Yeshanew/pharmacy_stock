@@ -176,9 +176,12 @@ import { format, parseISO, subDays } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
-const activeTab = ref('stock')
+const activeTab = ref('stock') // start on stock tab
 const tabs = [{ id:'stock', label:'Stock Report' }, { id:'sales', label:'Sales Report' }, { id:'expiry', label:'Expiry Report' }]
 const selectedBranch = ref(authStore.activeBranchId || 'all')
+
+// Track which tabs have already been loaded to avoid re-fetching
+const loaded = ref({ stock: false, sales: false, expiry: false })
 
 // Stock
 const stockReport = ref([]); const stockLoading = ref(false); const stockFilter = ref('all')
@@ -198,17 +201,27 @@ const salesSummary  = computed(() => ({
 // Expiry
 const expiryReport = ref([]); const expiryLoading = ref(false); const expiryDays = ref(90)
 
-onMounted(() => { fetchStockReport(); fetchSalesReport(); fetchExpiryReport() })
+// Only load the active tab on mount — lazy-load others when the user switches
+onMounted(() => fetchTab(activeTab.value))
 watch(stockFilter, fetchStockReport)
 
-// Keep local selected branch filter synchronized with top bar, and reload on changes
+// Switch tab → load that tab if not yet loaded
+watch(activeTab, (tab) => { if (!loaded.value[tab]) fetchTab(tab) })
+
+function fetchTab(tab) {
+  if (tab === 'stock')  return fetchStockReport()
+  if (tab === 'sales')  return fetchSalesReport()
+  if (tab === 'expiry') return fetchExpiryReport()
+}
+
+// Keep local selected branch filter synchronized with top bar, and reload ALL loaded tabs on changes
 watch(() => authStore.activeBranchId, (newId) => {
   selectedBranch.value = newId || 'all'
 })
 watch(selectedBranch, () => {
-  fetchStockReport()
-  fetchSalesReport()
-  fetchExpiryReport()
+  // Reset loaded flags so all re-fetch with the new branch
+  loaded.value = { stock: false, sales: false, expiry: false }
+  fetchTab(activeTab.value)
 })
 
 async function fetchStockReport() {
@@ -218,6 +231,7 @@ async function fetchStockReport() {
     if (stockFilter.value !== 'all') params.stock_status = stockFilter.value
     const { data } = await api.get('/medicines', { params })
     stockReport.value = data.data
+    loaded.value.stock = true
   } finally { stockLoading.value=false }
 }
 
@@ -226,6 +240,7 @@ async function fetchSalesReport() {
   try {
     const { data } = await api.get('/sales', { params:{ per_page:200, date_from:salesDateFrom.value, date_to:salesDateTo.value, branch_id: selectedBranch.value }})
     salesReport.value = data.data
+    loaded.value.sales = true
   } finally { salesLoading.value=false }
 }
 
@@ -234,6 +249,7 @@ async function fetchExpiryReport() {
   try {
     const { data } = await api.get('/medicines', { params:{ stock_status:'expiring_soon', per_page:200, branch_id: selectedBranch.value }})
     expiryReport.value = data.data.filter(m => m.days_to_expiry <= expiryDays.value)
+    loaded.value.expiry = true
   } finally { expiryLoading.value=false }
 }
 

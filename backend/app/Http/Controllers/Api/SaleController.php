@@ -15,7 +15,7 @@ class SaleController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Sale::with(['user', 'items.medicine'])->latest();
+        $query = Sale::with(['user:id,name', 'items.medicine:id,name,unit,dosage_form,strength'])->latest();
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {

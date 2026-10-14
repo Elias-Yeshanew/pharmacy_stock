@@ -66,9 +66,18 @@ class Medicine extends Model
             if ($this->relationLoaded('activeBranchStock')) {
                 return $this->activeBranchStock?->stock_quantity ?? 0;
             }
-            return $this->activeBranchStock()->value('stock_quantity') ?? 0;
+            if ($this->relationLoaded('branchStocks')) {
+                return $this->branchStocks->firstWhere('branch_id', $branchId)?->stock_quantity ?? 0;
+            }
+            return $this->activeBranchStock?->stock_quantity ?? ($this->activeBranchStock()->value('stock_quantity') ?? 0);
         }
-        return $this->branchStocks()->sum('stock_quantity');
+
+        // When viewing all branches, sum in-memory if already loaded
+        if ($this->relationLoaded('branchStocks')) {
+            return (int) $this->branchStocks->sum('stock_quantity');
+        }
+
+        return (int) $this->branchStocks()->sum('stock_quantity');
     }
 
     public function getReorderLevelAttribute()
@@ -77,6 +86,9 @@ class Medicine extends Model
         if ($branchId) {
             if ($this->relationLoaded('activeBranchStock')) {
                 return $this->activeBranchStock?->reorder_level ?? $this->attributes['reorder_level'] ?? 10;
+            }
+            if ($this->relationLoaded('branchStocks')) {
+                return $this->branchStocks->firstWhere('branch_id', $branchId)?->reorder_level ?? $this->attributes['reorder_level'] ?? 10;
             }
             return $this->activeBranchStock()->value('reorder_level') ?? $this->attributes['reorder_level'] ?? 10;
         }

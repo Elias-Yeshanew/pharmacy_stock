@@ -59,10 +59,15 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? (
+            'options' => extension_loaded('pdo_mysql') ? array_merge(
+                [
+                    PDO::ATTR_EMULATE_PREPARES => true,    // 1 RTT instead of 2 for remote DBs
+                    PDO::ATTR_PERSISTENT       => env('DB_PERSISTENT', false),
+                    PDO::MYSQL_ATTR_COMPRESS   => true,    // compress over WAN
+                ],
                 (env('MYSQL_ATTR_SSL_CA') || file_exists(base_path('ca.pem'))) ? [
-                    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', base_path('ca.pem')),
-                    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                    PDO::MYSQL_ATTR_SSL_CA                  => env('MYSQL_ATTR_SSL_CA', base_path('ca.pem')),
+                    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT  => false,
                 ] : []
             ) : [],
         ],
